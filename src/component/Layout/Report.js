@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-//import axios from 'axios';
-//import * as React from 'react';
-import data from "./data.json";
+import React, { useState, useEffect } from "react";
+import axios from 'axios';
+
+
 import "./Report.css";
 import dayjs from "dayjs";
 import { DemoContainer, DemoItem } from "@mui/x-date-pickers/internals/demo";
@@ -13,20 +13,60 @@ const Report = () => {
   const [showTable, setShowTable] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [documentGenerated, setDocumentGenerated] = useState(false);
-  //const [options, setOptions] = useState([]);
+  const [options, setOptions] = useState([]);
   const [selectedOption, setSelectedOption] = useState("");
+  const [data, setData] = useState([]);
+
+  const [tableData, setTableData] = useState([])
+
+
+  useEffect(() => {
+    fetchReportOptions();
+    fetchtable();
+  }, []);
+
+  const fetchReportOptions = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/report");
+      console.log(response)
+      setOptions(response.data);
+    } catch (error) {
+      console.error('Error fetching report options:', error);
+    }
+  };
+
+  const fetchtable = async () => {
+    try {
+      const response = await axios.get("http://localhost:8080/api/vehicledata");
+      console.log(response)
+      if (Array.isArray(response.data)) {
+        setTableData(response.data);
+        
+      } else {
+        console.error('Data received from the API is not in the expected format:', response.data);
+      }
+
+     // setTableData(response);
+//
+     // setShowTable(true);
+
+    } catch (error) {
+      console.error('Error fetching report options:', error);
+    }
+  };
+
+
 
   const handleSelectionChange = (e) => {
     const selectedOption = e.target.value;
     setSelectedOption(selectedOption);
 
-    // You can optionally send the selected option to the backend for validation here
+    
   };
 
   const handleTimeFrameChange = (event) => {
     const selectedValue = event.target.value;
-    // You can perform any logic based on the selected value here
-    // For example, show the DateRangePicker when "default" is selected
+    
     setShowDatePicker(selectedValue === "default");
   };
 
@@ -50,8 +90,7 @@ const Report = () => {
 
   const handleDateRangeChange = (event) => {
     const selectedRange = event.target.value;
-    // Logic to set value based on selected range
-    // Example: setValue(newValue);
+    
   };
   return (
     <div>
@@ -68,31 +107,27 @@ const Report = () => {
             color: "white",
           }}
         >
-          {/*<select className="form-select shadow-none fw-semibold rounded-0 design" onChange={handleSelectionChange} value={selectedOption}>
-            <option selected style={{ color: "white" }}>Report</option>
-            {options.map((option, index) => (
-                <option key={index} value={option}>{option}</option>
-            ))}
-        </select>*/}
 
 
-          <select className=" design ">
+
+          <select className="design" onChange={handleSelectionChange}>
             <option selected style={{ color: "white" }}>
               Report
             </option>
-            <option value="1">
-              Total miles Driven
-            </option>
-            <option value="2">Energy Consumption</option>
-            <option value="3">Cost Analysis</option>
+            {options.map((option, index) => (
+              <option key={index} value={option}>
+                {option}
+              </option>
+            ))}
           </select>
+
           <select className=" design" onChange={handleDateRangeChange}>
             <option value="default">Frequency</option>
             <option value="last7days">Daily</option>
             <option value="last30days">Weekly</option>
             <option value="thisMonth">monthly</option>
           </select>
-          
+
 
           <select
             className="form-select shadow-none fw-semibold rounded-0 design"
@@ -166,6 +201,8 @@ const Report = () => {
         </div>
       </div>
 
+
+
       <div className="table-container">
         {showTable && (
           <div>
@@ -182,11 +219,11 @@ const Report = () => {
                 </tr>
               </thead>
               <tbody>
-                {data.map((item, index) => (
+                {tableData.map((item, index) => (
                   <tr key={index}>
                     <td>{item.licensePlate}</td>
                     <td>{item.make}</td>
-                    <td>{item.VIN}</td>
+                    <td>{item.vin}</td>
                     <td>{item.model}</td>
                     <td>{item.type}</td>
                     <td>{item.date}</td>
